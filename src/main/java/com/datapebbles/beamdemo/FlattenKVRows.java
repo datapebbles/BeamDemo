@@ -27,6 +27,20 @@ class FlattenKVRows extends PTransform<PCollection<Row>, PCollection<Row>> {
 
     @Override
     public PCollection<Row> expand(PCollection<Row> input) {
+        /*
+        Transform a PCollection of the form:
+            key:
+                A: 1
+                B: 2
+            value:
+                C: 3
+                D: 4
+        To:
+            A: 1
+            B: 2
+            C: 3
+            D: 4
+         */
         return input.apply(ParDo.of(new DoFn<Row, Row>() {
             @ProcessElement
             public void processElement(ProcessContext ctx) {

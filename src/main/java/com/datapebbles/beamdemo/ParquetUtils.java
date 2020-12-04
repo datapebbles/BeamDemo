@@ -82,6 +82,8 @@ class ParquetUtils {
         return records.apply(FileIO.<GenericRecord>write().via(sink).to(destination));
     }
 
+    // The code below is taken in large part from the Apache Parquet project
+
     private ParquetMetadata readMetadata(FileIO.ReadableFile file) throws IOException {
         long size = file.getMetadata().sizeBytes();
         if (size < MINIMUM_PARQUET_SIZE) {

@@ -32,15 +32,26 @@ public class DemoJob {
 
         // Read the input file into a collection of Rows (which have Beam Schemas attached to them)
         PCollection<Row> input = ParquetUtils.readParquetFile("../QualityPipeline/5m_book_reviews.parquet", pipeline);
+
+        // Drop unnecessary fields
         PCollection<Row> relevantFieldsOnly = selectRelevantFields(input);
+
+        // Drop invalid rows (i.e. corrupt score/no votes)
         PCollection<Row> validRowsOnly = removeInvalidRows(relevantFieldsOnly);
+
+        // Cast fields to the types needed for the aggregation
         PCollection<Row> withCorrectTypes = castToCorrectTypes(validRowsOnly);
+
+        // Calculate the helpfulness ratio for each review (helpful_votes/total_votes)
         PCollection<Row> withHelpfulness = computeHelpfulnessRatio(withCorrectTypes);
+
+        // Perform the aggregation (sums of helpful_votes and total_votes, means of star_rating and helpfulness_ratio)
         PCollection<Row> aggregated = aggregate(withHelpfulness);
 
-
+        // Write the results to a directory in Parquet format
         ParquetUtils.writeParquetFile("output", aggregated);
 
+        // Actually start the pipeline, so all of the above is processed
         pipeline.run().waitUntilFinish();
     }
 

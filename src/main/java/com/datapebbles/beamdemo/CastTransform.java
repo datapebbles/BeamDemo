@@ -19,7 +19,9 @@ class CastTransform extends PTransform<PCollection<Row>, PCollection<Row>> {
 
     @Override
     public PCollection<Row> expand(PCollection<Row> input) {
-        return input.apply(ParDo.of(new CastDoFn())).setRowSchema(outputSchema);
+        return input
+                .apply(ParDo.of(new CastDoFn()))
+                .setRowSchema(outputSchema);
     }
 
     private class CastDoFn extends DoFn<Row, Row> {
@@ -27,6 +29,9 @@ class CastTransform extends PTransform<PCollection<Row>, PCollection<Row>> {
         public void process(ProcessContext ctx) {
             Row input = ctx.element();
             Row.Builder builder = Row.withSchema(outputSchema);
+
+            // For fields which have a casting function registered, apply the cast and add it to the builder.
+            // For all others, just add the field as-is.
             input.getSchema().getFields().forEach(field -> {
                 String name = field.getName();
                 Object value = input.getValue(name);
@@ -35,6 +40,7 @@ class CastTransform extends PTransform<PCollection<Row>, PCollection<Row>> {
                 }
                 builder.addValue(value);
             });
+
             ctx.output(builder.build());
         }
     }
